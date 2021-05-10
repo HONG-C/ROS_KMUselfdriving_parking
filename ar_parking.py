@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-
+#parking system
 import rospy, math
 import cv2, time, rospy
 import numpy as np
@@ -15,20 +15,14 @@ arData = {"DX":0.0, "DY":0.0, "DZ":0.0, "AX":0.0, "AY":0.0, "AZ":0.0, "AW":0.0}
 roll, pitch, yaw = 0, 0, 0
 
 
-DX_KP=1.2
-DX_KI=2.5
-DX_KD=3.2
 DX_err=0
 DX_err_prev=0
 
-YAW_KP=1.2
-YAW_KI=2.5
-YAW_KD=3.2
+
 YAW_err=0
 YAW_err_prev=0
 
 
-run_time=0.001
 def callback(msg):
     global arData
 
@@ -42,17 +36,22 @@ def callback(msg):
         arData["AZ"] = i.pose.pose.orientation.z
         arData["AW"] = i.pose.pose.orientation.w
 
-def DX_PID_CONTROL():
-	P_CON=DX_KP*DX_err
-	I_CON=DX_KI*DX_err*run_time
-	D_CON=DX_KD*(DX_err-DX_err_prev)/run_time
-	return P_CON+I_CON+D_CON
+class PID_CONTROL():
 
-def YAW_PID_CONTROL():
-	P_CON=YAW_KP*YAW_err
-	I_CON=YAW_KI*YAW_err*run_time
-	D_CON=YAW_KD*(YAW_err-YAW_err_prev)/run_time
-	return P_CON+I_CON+D_CON
+    run_time=0.001
+
+    def __init__(self,KP,KI,KD):
+        self.KP=KP
+        self.KI=KI
+        self.KD=KD
+
+    def pid_val(self,err,err_prev):
+        P_CON=self.KP*err
+        I_CON=self.KI*err*self.run_time
+        D_CON=self.KD*(err-err_prev)/self.run_time
+        return P_CON+I_CON+D_CON
+
+
 
 def RE_PARKING():
 	parking_time=700	
@@ -111,6 +110,8 @@ while not rospy.is_shutdown():
 
 #move using dx
     speed=15
+    DX=PID_CONTROL(1.2,2.5,3.2)
+    YAW=PID_CONTROL(1.2,2.5,3.2)
     DX_err=arData["DX"]
     YAW_err=round(yaw,1)
 
@@ -129,7 +130,7 @@ while not rospy.is_shutdown():
 
 
 
-    angle=DX_PID_CONTROL()-YAW_PID_CONTROL()*6
+    angle=DX.pid_val(DX_err,DX_err_prev)-YAW.pid_val(YAW_err,YAW_err_prev)*6
     if YAW_err>=15 or YAW_err<=-15:
 	angle=angle
     else:

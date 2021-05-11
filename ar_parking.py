@@ -1,5 +1,7 @@
 #! /usr/bin/env python
-#parking system
+# -*- coding: utf-8 -*-
+#parking system using pid control
+#PID제어를 이용한 주차 시스템 
 import rospy, math
 import cv2, time, rospy
 import numpy as np
@@ -13,14 +15,6 @@ from std_msgs.msg import Int32MultiArray
 arData = {"DX":0.0, "DY":0.0, "DZ":0.0, "AX":0.0, "AY":0.0, "AZ":0.0, "AW":0.0}
 
 roll, pitch, yaw = 0, 0, 0
-
-
-DX_err=0
-DX_err_prev=0
-
-
-YAW_err=0
-YAW_err_prev=0
 
 
 def callback(msg):
@@ -39,7 +33,8 @@ def callback(msg):
 class PID_CONTROL():
 
     run_time=0.001
-
+    err=0
+    err_prev=0
     def __init__(self,KP,KI,KD):
         self.KP=KP
         self.KI=KI
@@ -112,37 +107,36 @@ while not rospy.is_shutdown():
     speed=15
     DX=PID_CONTROL(1.2,2.5,3.2)
     YAW=PID_CONTROL(1.2,2.5,3.2)
-    DX_err=arData["DX"]
-    YAW_err=round(yaw,1)
+    DX.err=arData["DX"]
+    YAW.err=round(yaw,1)
 
 #brake when it is parked
 
 
     if arData["DY"]<=70:
-	speed=0
-    	if arData["DY"]<34:
+    	speed=0
+        if arData["DY"]<34:
 		RE_PARKING()
 	else:
 		pass
-	
     else:
 	pass
 
 
 
-    angle=DX.pid_val(DX_err,DX_err_prev)-YAW.pid_val(YAW_err,YAW_err_prev)*6
-    if YAW_err>=15 or YAW_err<=-15:
-	angle=angle
+    angle=DX.pid_val(DX.err,DX.err_prev)-YAW.pid_val(YAW.err,YAW.err_prev)*6
+    if YAW.err>=15 or YAW.err<=-15:
+	    angle=angle
     else:
-	pass
-    print(angle)
+	    pass
+    print(DX.run_time)
     
     
 
     xycar_msg.data = [angle, speed]
     motor_pub.publish(xycar_msg)
-    DX_err_prev=DX_err
-    YAW_err_prev=YAW_err
+    DX.err_prev=DX.err
+    YAW.err_prev=YAW.err
 
 
 cv2.destroyAllWindows()

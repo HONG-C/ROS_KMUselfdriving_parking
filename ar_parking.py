@@ -30,33 +30,22 @@ def callback(msg):
         arData["AZ"] = i.pose.pose.orientation.z
         arData["AW"] = i.pose.pose.orientation.w
 
-class PID_CONTROL():
+class PID_CONTROL():#pid제어를 위한 클래스 
 
     run_time=0.001
-    err=0
+    err=0	#dx값과 yaw값을 0에 근사시켜야 하는 에러라고 지정 
     err_prev=0
-    def __init__(self,KP,KI,KD):
+    def __init__(self,KP,KI,KD):#pid제어 계수 초기화 
         self.KP=KP
         self.KI=KI
         self.KD=KD
 
-    def pid_val(self,err,err_prev):
+    def pid_val(self,err,err_prev):#pid제어를 실행하는 함수 
         P_CON=self.KP*err
         I_CON=self.KI*err*self.run_time
         D_CON=self.KD*(err-err_prev)/self.run_time
         return P_CON+I_CON+D_CON
 
-
-
-def RE_PARKING():
-	parking_time=700	
-	while parking_time>0:	
-		angle=0
-		speed=-5		
-		parking_time=parking_time-1
-    		xycar_msg.data = [angle, speed]
-    		motor_pub.publish(xycar_msg)
-	
 
 
 rospy.init_node('ar_drive')
@@ -103,36 +92,25 @@ while not rospy.is_shutdown():
     cv2.imshow('AR Tag Position', img)
     cv2.waitKey(1)
 
-#move using dx
+#기본 속도 설정 및 클래스 초기화 
     speed=15
     DX=PID_CONTROL(1.2,2.5,3.2)
     YAW=PID_CONTROL(1.2,2.5,3.2)
     DX.err=arData["DX"]
     YAW.err=round(yaw,1)
 
-#brake when it is parked
 
-
+#주차 시 정지 
     if arData["DY"]<=70:
     	speed=0
-        if arData["DY"]<34:
-		RE_PARKING()
-	else:
-		pass
     else:
 	pass
 
 
+#dx값과 yaw값을 이용한 pid제어 값 통합 
+    angle=DX.pid_val(DX.err,DX.err_prev)-YAW.pid_val(YAW.err,YAW.err_prev)*15
 
-    angle=DX.pid_val(DX.err,DX.err_prev)-YAW.pid_val(YAW.err,YAW.err_prev)*6
-    if YAW.err>=15 or YAW.err<=-15:
-	    angle=angle
-    else:
-	    pass
-    print(DX.run_time)
-    
-    
-
+#속도와 조향각 퍼블리싱 
     xycar_msg.data = [angle, speed]
     motor_pub.publish(xycar_msg)
     DX.err_prev=DX.err
@@ -140,7 +118,4 @@ while not rospy.is_shutdown():
 
 
 cv2.destroyAllWindows()
-
-
-
 

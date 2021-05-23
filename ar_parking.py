@@ -5,6 +5,11 @@
 import rospy, math
 import cv2, time, rospy
 import numpy as np
+import matplotlib.pyplot as plt
+
+x_axis=[]
+y_axis=[]
+running_time=0
 
 from ar_track_alvar_msgs.msg import AlvarMarkers
 
@@ -115,6 +120,13 @@ while not rospy.is_shutdown():
     motor_pub.publish(xycar_msg)
     DX.err_prev=DX.err
     YAW.err_prev=YAW.err
+
+#차선 인지 확인을 위한 그래프 작성 
+    running_time=running_time+1
+    x_axis.append(running_time)
+    y_axis.append(round(yaw,1))
+    plt.plot(x_axis,y_axis)
+    plt.pause(0.0000000001)
 
 
 cv2.destroyAllWindows()

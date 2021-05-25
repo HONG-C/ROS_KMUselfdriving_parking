@@ -99,10 +99,10 @@ while not rospy.is_shutdown():
 
 #기본 속도 설정 및 클래스 초기화 
     speed=15
-    DX=PID_CONTROL(1.2,2.5,3.2)
-    YAW=PID_CONTROL(1.2,2.5,3.2)
+    DX=PID_CONTROL(0.52,6,0.042)
+    YAW=PID_CONTROL(0.52,6,0.042)
     DX.err=arData["DX"]
-    YAW.err=round(yaw,1)
+    YAW.err=round(yaw,3)
 
 
 #주차 시 정지 
@@ -121,12 +121,6 @@ while not rospy.is_shutdown():
     DX.err_prev=DX.err
     YAW.err_prev=YAW.err
 
-#차선 인지 확인을 위한 그래프 작성 
-    running_time=running_time+1
-    x_axis.append(running_time)
-    y_axis.append(round(yaw,1))
-    plt.plot(x_axis,y_axis)
-    plt.pause(0.0000000001)
 
 
 cv2.destroyAllWindows()

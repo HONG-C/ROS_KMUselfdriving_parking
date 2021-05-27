@@ -7,8 +7,6 @@ import cv2, time, rospy
 import numpy as np
 import matplotlib.pyplot as plt
 
-x_axis=[]
-y_axis=[]
 running_time=0
 
 from ar_track_alvar_msgs.msg import AlvarMarkers

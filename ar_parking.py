@@ -101,8 +101,10 @@ while not rospy.is_shutdown():
     YAW=PID_CONTROL(0.52,6,0.042)
     DX.err=arData["DX"]
     YAW.err=round(yaw,3)
-
-
+    print("distance:",float(distance))
+    print("dx:",arData["DX"])    
+    print("dy:",arData["DY"])
+    print("yaw:",round(yaw,1))        
 #주차 시 정지 
     if arData["DY"]<=70:
     	speed=0
